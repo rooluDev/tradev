@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 env:
-  DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/tradev-app
+  DOCKER_IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/tradev-app
 
 jobs:
   # ──────────── 1. Test ────────────
