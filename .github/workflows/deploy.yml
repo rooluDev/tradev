@@ -164,8 +164,21 @@ jobs:
             # 최신 이미지 pull
             docker pull ${{ env.DOCKER_IMAGE }}:latest
 
-            # 앱 컨테이너 재시작 (nginx resolver가 자동으로 새 컨테이너 연결)
-            docker compose up -d --no-deps app
+            # 이전 앱 컨테이너 중지 및 제거
+            docker stop tradev-app 2>/dev/null || true
+            docker rm   tradev-app 2>/dev/null || true
+
+            # 새 앱 컨테이너 시작
+            # --network-alias app : nginx의 proxy_pass $app_upstream(http://app:8080) 에서 찾을 수 있도록
+            docker run -d \
+              --name tradev-app \
+              --network tradev_tradev-net \
+              --network-alias app \
+              --env-file backend/.env.prod \
+              -e SPRING_PROFILES_ACTIVE=prod \
+              -p 8080:8080 \
+              --restart unless-stopped \
+              ${{ env.DOCKER_IMAGE }}:latest
 
             # Health check (최대 90초 대기 — Spring Boot 기동 시간 고려)
             for i in $(seq 1 18); do
