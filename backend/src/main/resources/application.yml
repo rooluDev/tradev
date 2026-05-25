@@ -5,9 +5,9 @@ spring:
     name: tradev
 
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:tradev}?characterEncoding=UTF-8&serverTimezone=Asia/Seoul
-    username: ${DB_USERNAME:tradev}
-    password: ${DB_PASSWORD:tradev}
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/tradev?characterEncoding=UTF-8&serverTimezone=Asia/Seoul}
+    username: ${MYSQL_USERNAME:tradev}
+    password: ${MYSQL_PASSWORD:tradev}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 10
@@ -32,8 +32,8 @@ spring:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
+            client-id: ${GOOGLE_CLIENT_ID:dummy}
+            client-secret: ${GOOGLE_CLIENT_SECRET:dummy}
             scope: profile,email
             redirect-uri: "{baseUrl}/api/auth/oauth2/callback/google"
 
@@ -51,6 +51,9 @@ spring:
       max-file-size: 10MB
       max-request-size: 50MB
 
+mail:
+  from: ${MAIL_FROM:noreply@tradev.shop}
+
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: com.tradev.domain
@@ -64,15 +67,15 @@ jwt:
 
 aws:
   s3:
-    access-key: ${AWS_ACCESS_KEY_ID}
-    secret-key: ${AWS_SECRET_ACCESS_KEY}
-    region: ${AWS_REGION:ap-northeast-2}
-    bucket: ${S3_BUCKET_NAME}
-    base-url: ${S3_BASE_URL}
+    access-key: ${AWS_S3_ACCESS_KEY:}
+    secret-key: ${AWS_S3_SECRET_KEY:}
+    region: ${AWS_S3_REGION:ap-northeast-2}
+    bucket: ${AWS_S3_BUCKET:}
+    base-url: ${AWS_S3_BASE_URL:}
   endpoint: ${AWS_ENDPOINT:}
 
 claude:
-  api-key: ${CLAUDE_API_KEY}
+  api-key: ${CLAUDE_API_KEY:}
   model: ${CLAUDE_MODEL:claude-sonnet-4-6}
   max-tokens: ${CLAUDE_MAX_TOKENS:1024}
 

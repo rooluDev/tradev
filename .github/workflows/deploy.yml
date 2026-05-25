@@ -191,7 +191,10 @@ jobs:
               echo "Waiting... attempt $i/18 (status=$STATUS)"
               if [ $i -eq 18 ]; then
                 echo "Health check failed after 90s"
-                docker compose logs --tail=50 app
+                echo "=== tradev-app container logs ==="
+                docker logs tradev-app --tail=100
+                echo "=== container status ==="
+                docker ps -a | grep tradev
                 exit 1
               fi
             done
