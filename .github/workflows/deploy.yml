@@ -185,17 +185,17 @@ jobs:
               --restart unless-stopped \
               ${{ env.DOCKER_IMAGE }}:latest
 
-            # Health check (최대 90초 대기 — Spring Boot 기동 시간 고려)
-            for i in $(seq 1 18); do
+            # Health check (최대 3분 대기 — Spring Boot 기동 시간 고려)
+            for i in $(seq 1 36); do
               sleep 5
-              STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health || echo "000")
+              STATUS=$(curl -s --max-time 5 -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health 2>/dev/null || true)
               if [ "$STATUS" = "200" ]; then
                 echo "Health check passed (attempt $i)"
                 break
               fi
-              echo "Waiting... attempt $i/18 (status=$STATUS)"
-              if [ $i -eq 18 ]; then
-                echo "Health check failed after 90s"
+              echo "Waiting... attempt $i/36 (status=$STATUS)"
+              if [ $i -eq 36 ]; then
+                echo "Health check failed after 3 minutes"
                 echo "=== tradev-app container logs ==="
                 docker logs tradev-app --tail=100
                 echo "=== container status ==="
