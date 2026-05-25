@@ -1,0 +1,32 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+
+server:
+  tomcat:
+    threads:
+      max: 200
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/plain
+
+management:
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    com.tradev: INFO
+    root: WARN
+  file:
+    name: /app/logs/tradev.log
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      max-history: 30

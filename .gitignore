@@ -1,0 +1,46 @@
+# Env — 절대 커밋 금지
+.env
+.env.local
+.env.prod
+.env.*.local
+*.env
+backend/.env.prod
+backend/.env.local
+mysql/.env.mysql
+!backend/.env.example
+
+# macOS
+.DS_Store
+
+# Gradle
+.gradle/
+backend/build/
+backend/.gradle/
+backend/out/
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+*.swo
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Logs
+*.log
+logs/
+
+# Docker
+mysql/data/
+
+# Test reports
+backend/build/reports/
+
+# Compiled files
+*.class

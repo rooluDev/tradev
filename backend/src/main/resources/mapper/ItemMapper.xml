@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tradev.domain.item.repository.ItemMapper">
+
+    <select id="searchItems" resultType="com.tradev.domain.item.dto.ItemSummary">
+        SELECT
+            i.id,
+            i.title,
+            i.price,
+            i.status,
+            i.wish_count,
+            i.view_count,
+            i.location,
+            i.created_at,
+            i.boosted_at,
+            (SELECT ii.image_url FROM item_images ii WHERE ii.item_id = i.id AND ii.sort_order = 0 LIMIT 1) AS thumbnail_url,
+            c.name AS category_name,
+            u.id AS seller_id,
+            u.nickname AS seller_nickname
+        FROM items i
+        JOIN users u ON i.seller_id = u.id
+        JOIN categories c ON i.category_id = c.id
+        WHERE i.deleted_at IS NULL
+          AND i.hidden = false
+          AND (i.status = 'SALE' OR i.status = #{status, jdbcType=VARCHAR})
+        <if test="status != null">
+            AND i.status = #{status}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND MATCH(i.title, i.description) AGAINST(#{keyword} IN BOOLEAN MODE)
+        </if>
+        <if test="categoryId != null">
+            AND (i.category_id = #{categoryId}
+                OR i.category_id IN (SELECT id FROM categories WHERE parent_id = #{categoryId}))
+        </if>
+        <if test="minPrice != null">
+            AND i.price >= #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND i.price &lt;= #{maxPrice}
+        </if>
+        <if test="tradeType != null and tradeType != ''">
+            AND (i.trade_type = #{tradeType} OR i.trade_type = 'ALL')
+        </if>
+        <if test="itemCondition != null and itemCondition != ''">
+            AND i.item_condition = #{itemCondition}
+        </if>
+        <if test="sellerId != null">
+            AND i.seller_id = #{sellerId}
+        </if>
+        <if test="cursorCreatedAt != null and cursorId != null">
+            AND (i.created_at &lt; #{cursorCreatedAt}
+                OR (i.created_at = #{cursorCreatedAt} AND i.id &lt; #{cursorId}))
+        </if>
+        ORDER BY
+        <choose>
+            <when test="keyword != null and keyword != ''">
+                MATCH(i.title, i.description) AGAINST(#{keyword} IN BOOLEAN MODE) DESC,
+            </when>
+        </choose>
+        COALESCE(i.boosted_at, i.created_at) DESC, i.id DESC
+        LIMIT #{pageSize} + 1
+    </select>
+
+</mapper>
