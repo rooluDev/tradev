@@ -1,21 +1,17 @@
-FROM eclipse-temurin:17-jdk-alpine AS build
-WORKDIR /app
-COPY backend/ .
-RUN chmod +x gradlew && ./gradlew bootJar --no-daemon -x test
-
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 # 보안: non-root 유저
 RUN addgroup -S tradev && adduser -S tradev -G tradev
 
-COPY --from=build /app/build/libs/*.jar app.jar
+# CI에서 빌드된 JAR 복사 (프론트엔드 정적 파일 포함)
+COPY backend/build/libs/*.jar app.jar
 RUN chown tradev:tradev app.jar
 
 USER tradev
 EXPOSE 8080
 
-# JVM 메모리 설정 (t3.small: 2GB RAM → 512MB heap)
+# JVM 메모리 설정 (t3.micro: 1GB RAM)
 ENTRYPOINT ["java", \
   "-Xms256m", "-Xmx512m", \
   "-XX:+UseContainerSupport", \

@@ -64,12 +64,6 @@ jobs:
         uses: actions/setup-java@v4
         with: { java-version: '17', distribution: 'temurin', cache: 'gradle' }
 
-      - name: Build JAR
-        working-directory: backend
-        run: |
-          chmod +x gradlew
-          ./gradlew bootJar --no-daemon
-
       - name: Build Frontend
         working-directory: frontend
         run: |
@@ -80,6 +74,12 @@ jobs:
         run: |
           mkdir -p backend/src/main/resources/static
           cp -r frontend/dist/. backend/src/main/resources/static/
+
+      - name: Build JAR (includes frontend static)
+        working-directory: backend
+        run: |
+          chmod +x gradlew
+          ./gradlew bootJar --no-daemon
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -126,79 +126,64 @@ jobs:
             set -e
             cd /home/${{ secrets.EC2_USER }}/tradev
 
+            # 최신 코드 반영 (nginx conf 등 설정 파일 업데이트)
+            git pull origin main
+
             # .env.prod 최신화
-            cat > backend/.env.prod << ENVEOF
-MYSQL_URL=${{ secrets.MYSQL_URL }}
-MYSQL_USERNAME=${{ secrets.MYSQL_USERNAME }}
-MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-REDIS_HOST=${{ secrets.REDIS_HOST }}
-REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
-JWT_SECRET=${{ secrets.JWT_SECRET }}
-GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-CLAUDE_API_KEY=${{ secrets.CLAUDE_API_KEY }}
-AWS_S3_ACCESS_KEY=${{ secrets.AWS_S3_ACCESS_KEY }}
-AWS_S3_SECRET_KEY=${{ secrets.AWS_S3_SECRET_KEY }}
-AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
-AWS_S3_BASE_URL=${{ secrets.AWS_S3_BASE_URL }}
-MAIL_HOST=${{ secrets.MAIL_HOST }}
-MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
-MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
-MAIL_FROM=${{ secrets.MAIL_FROM }}
-ENVEOF
+            {
+              echo "MYSQL_URL=${{ secrets.MYSQL_URL }}"
+              echo "MYSQL_USERNAME=${{ secrets.MYSQL_USERNAME }}"
+              echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}"
+              echo "REDIS_HOST=${{ secrets.REDIS_HOST }}"
+              echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}"
+              echo "JWT_SECRET=${{ secrets.JWT_SECRET }}"
+              echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}"
+              echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}"
+              echo "CLAUDE_API_KEY=${{ secrets.CLAUDE_API_KEY }}"
+              echo "AWS_S3_ACCESS_KEY=${{ secrets.AWS_S3_ACCESS_KEY }}"
+              echo "AWS_S3_SECRET_KEY=${{ secrets.AWS_S3_SECRET_KEY }}"
+              echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}"
+              echo "AWS_S3_BASE_URL=${{ secrets.AWS_S3_BASE_URL }}"
+              echo "MAIL_HOST=${{ secrets.MAIL_HOST }}"
+              echo "MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}"
+              echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}"
+              echo "MAIL_FROM=${{ secrets.MAIL_FROM }}"
+            } > backend/.env.prod
             chmod 600 backend/.env.prod
 
             # mysql/.env.mysql 최신화
-            cat > mysql/.env.mysql << MYSQLEOF
-MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-MYSQL_DATABASE=tradev
-MYSQL_USER=tradev
-MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-MYSQLEOF
+            {
+              echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_PASSWORD }}"
+              echo "MYSQL_DATABASE=tradev"
+              echo "MYSQL_USER=tradev"
+              echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}"
+            } > mysql/.env.mysql
             chmod 600 mysql/.env.mysql
 
             # 최신 이미지 pull
             docker pull ${{ env.DOCKER_IMAGE }}:latest
 
-            # Blue-Green 무중단 배포
-            CURRENT=$(docker ps --filter "name=tradev-app" --format "{{.Names}}" | head -1)
-            if [ -z "$CURRENT" ] || [[ "$CURRENT" == *"blue"* ]]; then
-              NEW_COLOR=green; OLD_COLOR=blue
-            else
-              NEW_COLOR=blue; OLD_COLOR=green
-            fi
+            # 앱 컨테이너 재시작 (nginx resolver가 자동으로 새 컨테이너 연결)
+            docker compose up -d --no-deps app
 
-            # 새 컨테이너 시작
-            docker run -d \
-              --name tradev-app-${NEW_COLOR} \
-              --env-file backend/.env.prod \
-              -e SPRING_PROFILES_ACTIVE=prod \
-              -p 8081:8080 \
-              --restart unless-stopped \
-              ${{ env.DOCKER_IMAGE }}:latest
-
-            # Health check (최대 60초)
-            for i in $(seq 1 12); do
+            # Health check (최대 90초 대기 — Spring Boot 기동 시간 고려)
+            for i in $(seq 1 18); do
               sleep 5
-              STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/actuator/health || echo "000")
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health || echo "000")
               if [ "$STATUS" = "200" ]; then
-                echo "Health check passed"
+                echo "Health check passed (attempt $i)"
                 break
               fi
-              if [ $i -eq 12 ]; then
-                echo "Health check failed, rolling back"
-                docker stop tradev-app-${NEW_COLOR} && docker rm tradev-app-${NEW_COLOR}
+              echo "Waiting... attempt $i/18 (status=$STATUS)"
+              if [ $i -eq 18 ]; then
+                echo "Health check failed after 90s"
+                docker compose logs --tail=50 app
                 exit 1
               fi
             done
 
-            # Nginx 포트 전환
-            sed -i "s/808[01]/8081/g" /etc/nginx/conf.d/tradev.conf || true
-            nginx -s reload
-
-            # 이전 컨테이너 제거
-            docker stop tradev-app-${OLD_COLOR} 2>/dev/null || true
-            docker rm tradev-app-${OLD_COLOR} 2>/dev/null || true
+            # Nginx 설정 리로드 (conf 변경 시 반영)
+            docker exec tradev-nginx nginx -s reload || true
 
             # 이미지 정리
             docker image prune -f

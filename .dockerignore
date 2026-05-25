@@ -1,0 +1,28 @@
+.git
+.github
+*.md
+CLAUDE.md
+
+# 프론트엔드 빌드 산출물 (JAR에 이미 포함됨)
+frontend/node_modules
+frontend/.vite
+frontend/dist
+
+# 백엔드 빌드 중간 산출물 (libs/*.jar 만 필요)
+backend/.gradle
+backend/build/classes
+backend/build/generated
+backend/build/reports
+backend/build/tmp
+backend/build/resources
+
+# 환경 변수 파일 (절대 이미지에 포함시키지 않는다)
+backend/.env.local
+backend/.env.prod
+mysql/.env.mysql
+.env
+.env.local
+
+# 로컬 전용
+docker-compose.local.yml
+mysql/data
