@@ -122,12 +122,16 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 20m
           script: |
             set -e
             cd /home/${{ secrets.EC2_USER }}/tradev
 
-            # 최신 코드 반영 (로컬 수정사항 무시하고 origin/main 으로 강제 동기화)
-            git fetch origin
+            # Git 락 파일 제거 (이전 실패 배포가 남긴 잠금 해제)
+            rm -f .git/index.lock .git/FETCH_HEAD .git/config.lock 2>/dev/null || true
+
+            # 최신 코드 반영 (--depth=1 으로 최신 커밋만 빠르게 동기화)
+            git fetch --depth=1 origin main
             git reset --hard origin/main
 
             # .env.prod 최신화
