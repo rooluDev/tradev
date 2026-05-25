@@ -126,8 +126,9 @@ jobs:
             set -e
             cd /home/${{ secrets.EC2_USER }}/tradev
 
-            # 최신 코드 반영 (nginx conf 등 설정 파일 업데이트)
-            git pull origin main
+            # 최신 코드 반영 (로컬 수정사항 무시하고 origin/main 으로 강제 동기화)
+            git fetch origin
+            git reset --hard origin/main
 
             # .env.prod 최신화
             {
