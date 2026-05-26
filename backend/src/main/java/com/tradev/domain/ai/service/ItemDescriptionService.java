@@ -5,7 +5,7 @@ import com.tradev.common.exception.TradevException;
 import com.tradev.domain.ai.client.ClaudeWebClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +26,7 @@ public class ItemDescriptionService {
         - 마크다운 형식 사용 금지
         """;
 
-    public Flux<String> generateStream(Long userId, String title, String categoryName) {
+    public Mono<String> generate(Long userId, String title, String categoryName) {
         if (!rateLimitService.tryConsume(userId)) {
             throw new TradevException(ErrorCode.AI_DAILY_LIMIT_EXCEEDED);
         }
@@ -36,6 +36,6 @@ public class ItemDescriptionService {
             title, categoryName
         );
 
-        return claudeWebClient.stream(SYSTEM_PROMPT, userMessage);
+        return claudeWebClient.complete(SYSTEM_PROMPT, userMessage);
     }
 }

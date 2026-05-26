@@ -6,12 +6,12 @@ import com.tradev.domain.ai.service.ItemDescriptionService;
 import com.tradev.domain.ai.service.PriceRecommendationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ai")
@@ -22,19 +22,16 @@ public class AiController {
     private final PriceRecommendationService priceRecommendationService;
 
     /**
-     * 상품 설명 자동완성 — SSE 스트리밍
-     * 클라이언트는 EventSource 또는 fetch+ReadableStream으로 수신
+     * 상품 설명 자동완성 — 단건 JSON 응답
      */
-    @GetMapping(value = "/item-description", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> generateDescription(
+    @GetMapping("/item-description")
+    public Mono<ResponseEntity<ApiResponse<Map<String, String>>>> generateDescription(
         @AuthenticationPrincipal Long userId,
         @RequestParam String title,
         @RequestParam String categoryName
     ) {
-        // Spring이 자동으로 "data: chunk\n\n" 형식으로 감싸줌
-        // 마지막에 [DONE] 신호를 보내 클라이언트가 스트림 완료를 인식
-        return itemDescriptionService.generateStream(userId, title, categoryName)
-            .concatWith(Flux.just("[DONE]"));
+        return itemDescriptionService.generate(userId, title, categoryName)
+            .map(text -> ResponseEntity.ok(ApiResponse.success(Map.of("description", text))));
     }
 
     /**
