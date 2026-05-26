@@ -1,6 +1,7 @@
 package com.tradev.domain.notification.service;
 
 import com.tradev.domain.notification.entity.NotificationType;
+import com.tradev.domain.notification.event.ChatMessageEvent;
 import com.tradev.domain.notification.event.TradeAcceptedEvent;
 import com.tradev.domain.notification.event.TradeCancelledEvent;
 import com.tradev.domain.notification.event.TradeCompletedEvent;
@@ -19,6 +20,21 @@ import org.springframework.stereotype.Component;
 public class NotificationEventListener {
 
     private final NotificationService notificationService;
+
+    @Async
+    @EventListener
+    public void onChatMessage(ChatMessageEvent event) {
+        notificationService.createAndSend(
+            event.getRecipientId(),
+            NotificationType.CHAT_MESSAGE,
+            String.format("%s님이 메시지를 보냈습니다: %s", event.getSenderNickname(),
+                event.getContentPreview().length() > 20
+                    ? event.getContentPreview().substring(0, 20) + "..."
+                    : event.getContentPreview()),
+            "/chat/" + event.getRoomId()
+        );
+        log.debug("[Notification] CHAT_MESSAGE → recipientId={}", event.getRecipientId());
+    }
 
     @Async
     @EventListener

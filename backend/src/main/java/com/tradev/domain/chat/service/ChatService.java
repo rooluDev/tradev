@@ -15,7 +15,9 @@ import com.tradev.domain.item.entity.Item;
 import com.tradev.domain.item.repository.ItemRepository;
 import com.tradev.domain.user.entity.User;
 import com.tradev.domain.user.repository.UserRepository;
+import com.tradev.domain.notification.event.ChatMessageEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +37,7 @@ public class ChatService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 채팅방 생성 또는 기존 방 반환 (상품 + 구매자 기준 유니크)
@@ -140,6 +143,17 @@ public class ChatService {
 
         // WebSocket 브로드캐스트: /topic/chat/{roomId}
         messagingTemplate.convertAndSend("/topic/chat/" + roomId, response);
+
+        // 상대방에게 알림 이벤트 발행
+        Long recipientId = room.getBuyer().getId().equals(senderId)
+            ? room.getSeller().getId()
+            : room.getBuyer().getId();
+        eventPublisher.publishEvent(new ChatMessageEvent(
+            recipientId,
+            sender.getNickname(),
+            roomId,
+            request.content()
+        ));
 
         return response;
     }
