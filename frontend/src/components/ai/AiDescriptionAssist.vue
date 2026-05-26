@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
-import api from '@/api'
+import api from '@/api/axios'
 
 const props = defineProps({
   title: { type: String, default: '' },
