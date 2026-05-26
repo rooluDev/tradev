@@ -115,13 +115,13 @@ async function fetchReviews(reset = true) {
   try {
     const { data } = await reviewApi.getByUser(route.params.userId, params)
     if (reset) {
-      reviews.value = data.data.items
+      reviews.value = data.data.reviews.items
       reviewSummary.value = { averageRating: data.data.averageRating, totalCount: data.data.totalCount }
     } else {
-      reviews.value.push(...data.data.items)
+      reviews.value.push(...data.data.reviews.items)
     }
-    reviewCursor.value = data.data.nextCursor
-    reviewHasNext.value = data.data.hasNext
+    reviewCursor.value = data.data.reviews.nextCursor
+    reviewHasNext.value = data.data.reviews.hasNext
   } catch {
     // 리뷰 로딩 실패는 조용히 처리
   }
