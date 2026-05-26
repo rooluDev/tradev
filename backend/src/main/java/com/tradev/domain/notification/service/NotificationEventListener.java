@@ -10,8 +10,9 @@ import com.tradev.domain.notification.event.TradeRequestedEvent;
 import com.tradev.domain.trade.entity.Trade;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -22,7 +23,7 @@ public class NotificationEventListener {
     private final NotificationService notificationService;
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onChatMessage(ChatMessageEvent event) {
         notificationService.createAndSend(
             event.getRecipientId(),
@@ -37,7 +38,7 @@ public class NotificationEventListener {
     }
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onTradeRequested(TradeRequestedEvent event) {
         Trade trade = event.getTrade();
         notificationService.createAndSend(
@@ -50,7 +51,7 @@ public class NotificationEventListener {
     }
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onTradeAccepted(TradeAcceptedEvent event) {
         Trade trade = event.getTrade();
         notificationService.createAndSend(
@@ -62,7 +63,7 @@ public class NotificationEventListener {
     }
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onTradeRejected(TradeRejectedEvent event) {
         Trade trade = event.getTrade();
         notificationService.createAndSend(
@@ -74,7 +75,7 @@ public class NotificationEventListener {
     }
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onTradeCancelled(TradeCancelledEvent event) {
         Trade trade = event.getTrade();
         // 상대방에게 알림 (취소한 사람이 아닌 쪽)
@@ -88,7 +89,7 @@ public class NotificationEventListener {
     }
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onTradeCompleted(TradeCompletedEvent event) {
         Trade trade = event.getTrade();
         notificationService.createAndSend(
