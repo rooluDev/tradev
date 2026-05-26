@@ -1,5 +1,6 @@
 package com.tradev.domain.auth.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tradev.domain.user.entity.User;
 import lombok.Getter;
 
@@ -7,10 +8,16 @@ import lombok.Getter;
 public class LoginResponse {
 
     private final String accessToken;
+
+    // refresh token은 HttpOnly 쿠키로만 전달 — JSON 응답 바디에는 포함하지 않음
+    @JsonIgnore
+    private final String refreshToken;
+
     private final UserInfo user;
 
-    public LoginResponse(String accessToken, User user) {
+    public LoginResponse(String accessToken, String refreshToken, User user) {
         this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
         this.user = new UserInfo(user);
     }
 

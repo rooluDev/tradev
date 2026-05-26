@@ -38,7 +38,7 @@ public class AuthController {
             HttpServletResponse response) {
 
         LoginResponse loginResponse = authService.login(request);
-        setRefreshTokenCookie(response, loginResponse.getAccessToken());
+        setRefreshTokenCookie(response, loginResponse.getRefreshToken());
         return ResponseEntity.ok(ApiResponse.success(loginResponse));
     }
 
@@ -53,7 +53,7 @@ public class AuthController {
         }
 
         LoginResponse loginResponse = authService.refresh(refreshToken);
-        setRefreshTokenCookie(response, loginResponse.getAccessToken());
+        setRefreshTokenCookie(response, loginResponse.getRefreshToken());
         return ResponseEntity.ok(ApiResponse.success(Map.of("accessToken", loginResponse.getAccessToken())));
     }
 

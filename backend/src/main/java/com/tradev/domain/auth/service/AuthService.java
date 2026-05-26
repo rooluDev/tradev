@@ -169,7 +169,7 @@ public class AuthService {
         String key = REFRESH_KEY_PREFIX + user.getId();
         redisTemplate.opsForValue().set(key, refreshToken, jwtUtil.getRefreshExpirySeconds(), TimeUnit.SECONDS);
 
-        return new LoginResponse(accessToken, user);
+        return new LoginResponse(accessToken, refreshToken, user);
     }
 
     private void sendVerificationEmail(String email) {
