@@ -45,11 +45,9 @@ public class AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .nickname(request.getNickname())
-                .emailVerified(false)
+                .emailVerified(true)
                 .build();
         userRepository.save(user);
-
-        sendVerificationEmail(user.getEmail());
     }
 
     @Transactional
@@ -66,10 +64,6 @@ public class AuthService {
                 throw new TradevException(ErrorCode.USER_SUSPENDED);
             }
             throw new TradevException(ErrorCode.USER_WITHDRAWN);
-        }
-
-        if (!user.getEmailVerified()) {
-            throw new TradevException(ErrorCode.AUTH_EMAIL_NOT_VERIFIED);
         }
 
         return issueTokens(user);

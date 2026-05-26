@@ -143,8 +143,8 @@ async function onSubmit() {
   loading.value = true
   try {
     await authApi.signup(form)
-    success('회원가입이 완료되었습니다. 이메일을 인증해주세요.')
-    router.push(`/email-verify?email=${encodeURIComponent(form.email)}`)
+    success('회원가입이 완료되었습니다. 로그인해주세요.')
+    router.push('/login')
   } catch (err) {
     handle(err)
   } finally {
