@@ -2,6 +2,13 @@ app:
   frontend-url: https://tradev.shop
 
 spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            redirect-uri: "https://tradev.shop/api/auth/oauth2/callback/google"
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -14,6 +21,7 @@ spring:
       maximum-pool-size: 20
 
 server:
+  forward-headers-strategy: framework
   tomcat:
     threads:
       max: 200
