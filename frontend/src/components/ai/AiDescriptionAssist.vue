@@ -10,7 +10,7 @@ const props = defineProps({
 const emit = defineEmits(['apply'])
 
 const authStore = useAuthStore()
-const { showToast } = useToast()
+const { warning } = useToast()
 
 const isGenerating = ref(false)
 const generatedText = ref('')
@@ -18,7 +18,7 @@ const error = ref('')
 
 async function generate() {
   if (!props.title) {
-    showToast('상품명을 먼저 입력해주세요.', 'warning')
+    warning('상품명을 먼저 입력해주세요.')
     return
   }
   if (!authStore.accessToken) return
@@ -34,10 +34,9 @@ async function generate() {
     })
     const url = `/api/ai/item-description?${params}&token=${encodeURIComponent(authStore.accessToken)}`
 
-    // Fetch Streams API로 SSE 수신
     const response = await fetch(url)
     if (!response.ok) {
-      const data = await response.json()
+      const data = await response.json().catch(() => ({}))
       if (data.code === 'AI_002') {
         error.value = '오늘 AI 사용 한도(10회)를 초과했습니다.'
       } else {
@@ -48,30 +47,30 @@ async function generate() {
 
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
+    let accumulated = ''
 
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
-      const chunk = decoder.decode(value)
+      const chunk = decoder.decode(value, { stream: true })
       const lines = chunk.split('\n')
       for (const line of lines) {
         if (line.startsWith('data: ')) {
-          generatedText.value += line.slice(6)
+          accumulated += line.slice(6)
+          generatedText.value = accumulated
         }
       }
+    }
+
+    // 생성 완료 시 자동으로 설명칸에 적용
+    if (accumulated) {
+      emit('apply', accumulated)
     }
   } catch (e) {
     error.value = 'AI 서버에 연결할 수 없습니다.'
     console.error('[AI]', e)
   } finally {
     isGenerating.value = false
-  }
-}
-
-function apply() {
-  if (generatedText.value) {
-    emit('apply', generatedText.value)
-    generatedText.value = ''
   }
 }
 </script>
@@ -100,18 +99,11 @@ function apply() {
       />
     </div>
 
-    <!-- 생성 결과 -->
-    <div v-if="generatedText || isGenerating" class="mt-2">
-      <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed min-h-[60px]">
-        {{ generatedText }}<span v-if="isGenerating" class="inline-block w-0.5 h-4 bg-purple-500 animate-pulse ml-0.5 align-middle" />
+    <!-- 생성 중 미리보기 -->
+    <div v-if="isGenerating && generatedText" class="mt-2">
+      <p class="text-sm text-gray-500 whitespace-pre-wrap leading-relaxed">
+        {{ generatedText }}<span class="inline-block w-0.5 h-4 bg-purple-500 animate-pulse ml-0.5 align-middle" />
       </p>
-      <button
-        v-if="!isGenerating && generatedText"
-        @click="apply"
-        class="mt-3 w-full py-2 text-sm font-medium border border-purple-400 text-purple-700 rounded-lg hover:bg-purple-50 transition-colors"
-      >
-        이 내용 사용하기
-      </button>
     </div>
 
     <!-- 에러 -->
