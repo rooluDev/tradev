@@ -24,4 +24,9 @@ public class ItemSearchCondition {
 
     @Builder.Default
     private int pageSize = 20;
+
+    // MyBatis LIMIT 파라미터 산술 연산 불가 → pageSize + 1 계산값을 별도 제공
+    public int getLimitSize() {
+        return pageSize + 1;
+    }
 }

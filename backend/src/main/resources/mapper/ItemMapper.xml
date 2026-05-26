@@ -61,7 +61,7 @@
             </when>
         </choose>
         COALESCE(i.boosted_at, i.created_at) DESC, i.id DESC
-        LIMIT #{pageSize} + 1
+        LIMIT #{limitSize}
     </select>
 
 </mapper>
