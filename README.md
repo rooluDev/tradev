@@ -30,10 +30,31 @@ Tradev는 거래의 처음부터 끝까지를 **하나의 서비스** 안에서 
 
 ## 화면
 
-<!-- 스크린샷 또는 데모 영상을 여기에 추가하세요 -->
+### 로그인 및 메인화면
+
+https://github.com/user-attachments/assets/64da2f38-a9b1-426d-b1c9-11a869e28e02
+
+## 추가 및 보기
+
+https://github.com/user-attachments/assets/c6689a58-989f-498a-ba9a-eac9a100bfb2
+
+### 채팅
+
+### 회원가입
+
+
+
+https://github.com/user-attachments/assets/544b9399-3a1b-4129-aed8-1a65122b8155
+
 
 ---
 
+## 배포 URL
+
+배포 URL : https://tradev.shop
+
+
+---
 ## AI 활용 개발 방식 (핵심 어필 포인트)
 
 이 프로젝트에서 가장 강조하고 싶은 부분은 **코드 자체가 아니라, AI를 도구로 활용하는 능력**입니다.
