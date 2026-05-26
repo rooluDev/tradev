@@ -1,3 +1,6 @@
+app:
+  frontend-url: https://tradev.shop
+
 spring:
   jpa:
     hibernate:

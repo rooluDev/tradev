@@ -22,6 +22,11 @@ const routes = [
     component: () => import('@/views/auth/EmailVerifyView.vue'),
   },
   {
+    // Google OAuth2 로그인 후 리다이렉트 콜백 페이지
+    path: '/oauth2/callback',
+    component: () => import('@/views/auth/OAuth2CallbackView.vue'),
+  },
+  {
     path: '/password-reset',
     component: () => import('@/views/auth/PasswordResetView.vue'),
     meta: { guestOnly: true },
