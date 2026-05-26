@@ -31,8 +31,10 @@ public class AiController {
         @RequestParam String title,
         @RequestParam String categoryName
     ) {
+        // Spring이 자동으로 "data: chunk\n\n" 형식으로 감싸줌
+        // 마지막에 [DONE] 신호를 보내 클라이언트가 스트림 완료를 인식
         return itemDescriptionService.generateStream(userId, title, categoryName)
-            .map(chunk -> "data: " + chunk + "\n\n");
+            .concatWith(Flux.just("[DONE]"));
     }
 
     /**

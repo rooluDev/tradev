@@ -16,7 +16,7 @@ const isGenerating = ref(false)
 const generatedText = ref('')
 const error = ref('')
 
-async function generate() {
+function generate() {
   if (!props.title) {
     warning('상품명을 먼저 입력해주세요.')
     return
@@ -27,50 +27,35 @@ async function generate() {
   generatedText.value = ''
   error.value = ''
 
-  try {
-    const params = new URLSearchParams({
-      title: props.title,
-      categoryName: props.categoryName || '기타',
-    })
-    const url = `/api/ai/item-description?${params}&token=${encodeURIComponent(authStore.accessToken)}`
+  const params = new URLSearchParams({
+    title: props.title,
+    categoryName: props.categoryName || '기타',
+    token: authStore.accessToken,
+  })
+  const url = `/api/ai/item-description?${params}`
 
-    const response = await fetch(url)
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}))
-      if (data.code === 'AI_002') {
-        error.value = '오늘 AI 사용 한도(10회)를 초과했습니다.'
-      } else {
-        error.value = 'AI 생성 중 오류가 발생했습니다.'
+  let accumulated = ''
+  const evtSource = new EventSource(url)
+
+  evtSource.onmessage = (event) => {
+    if (event.data === '[DONE]') {
+      evtSource.close()
+      isGenerating.value = false
+      if (accumulated) {
+        emit('apply', accumulated)
       }
       return
     }
+    accumulated += event.data
+    generatedText.value = accumulated
+  }
 
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-    let accumulated = ''
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      const chunk = decoder.decode(value, { stream: true })
-      const lines = chunk.split('\n')
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          accumulated += line.slice(6)
-          generatedText.value = accumulated
-        }
-      }
-    }
-
-    // 생성 완료 시 자동으로 설명칸에 적용
-    if (accumulated) {
-      emit('apply', accumulated)
-    }
-  } catch (e) {
-    error.value = 'AI 서버에 연결할 수 없습니다.'
-    console.error('[AI]', e)
-  } finally {
+  evtSource.onerror = () => {
+    evtSource.close()
     isGenerating.value = false
+    if (!accumulated) {
+      error.value = 'AI 생성 중 오류가 발생했습니다.'
+    }
   }
 }
 </script>
