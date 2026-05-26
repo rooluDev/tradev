@@ -8,8 +8,6 @@ import com.tradev.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +30,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final StringRedisTemplate redisTemplate;
-    private final JavaMailSender mailSender;
+    private final AsyncMailService asyncMailService;
 
     @Transactional
     public void signup(SignupRequest request) {
@@ -177,26 +175,18 @@ public class AuthService {
         String key = EMAIL_VERIFY_PREFIX + token;
         redisTemplate.opsForValue().set(key, email, VERIFY_TOKEN_TTL_HOURS, TimeUnit.HOURS);
 
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(email);
-            message.setSubject("[Tradev] 이메일 인증");
-            message.setText("아래 링크를 클릭하여 이메일을 인증해주세요:\n\nhttp://localhost:5173/email-verify?token=" + token);
-            mailSender.send(message);
-        } catch (Exception e) {
-            log.error("Failed to send verification email to {}: {}", email, e.getMessage());
-        }
+        asyncMailService.send(
+            email,
+            "[Tradev] 이메일 인증",
+            "아래 링크를 클릭하여 이메일을 인증해주세요:\n\nhttps://tradev.shop/email-verify?token=" + token
+        );
     }
 
     private void sendPasswordResetEmail(String email, String token) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(email);
-            message.setSubject("[Tradev] 비밀번호 재설정");
-            message.setText("아래 링크를 클릭하여 비밀번호를 재설정해주세요:\n\nhttp://localhost:5173/password-reset?token=" + token + "\n\n링크는 30분간 유효합니다.");
-            mailSender.send(message);
-        } catch (Exception e) {
-            log.error("Failed to send password reset email to {}: {}", email, e.getMessage());
-        }
+        asyncMailService.send(
+            email,
+            "[Tradev] 비밀번호 재설정",
+            "아래 링크를 클릭하여 비밀번호를 재설정해주세요:\n\nhttps://tradev.shop/password-reset?token=" + token + "\n\n링크는 30분간 유효합니다."
+        );
     }
 }
