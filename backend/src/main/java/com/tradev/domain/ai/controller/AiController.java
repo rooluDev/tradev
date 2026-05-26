@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,11 +27,10 @@ public class AiController {
      */
     @GetMapping(value = "/item-description", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> generateDescription(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal Long userId,
         @RequestParam String title,
         @RequestParam String categoryName
     ) {
-        Long userId = Long.valueOf(userDetails.getUsername());
         return itemDescriptionService.generateStream(userId, title, categoryName)
             .map(chunk -> "data: " + chunk + "\n\n");
     }
@@ -42,10 +40,9 @@ public class AiController {
      */
     @PostMapping("/price-recommendation")
     public Mono<ResponseEntity<ApiResponse<PriceRecommendationService.PriceRecommendation>>> recommendPrice(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal Long userId,
         @Valid @RequestBody PriceRecommendRequest request
     ) {
-        Long userId = Long.valueOf(userDetails.getUsername());
         return priceRecommendationService.recommend(userId, request.title(),
                 request.categoryName(), request.description())
             .map(result -> ResponseEntity.ok(ApiResponse.success(result)));

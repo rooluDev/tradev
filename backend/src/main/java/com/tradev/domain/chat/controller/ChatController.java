@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,10 +23,9 @@ public class ChatController {
     /** 채팅방 생성 또는 조회 (상품 기준) */
     @PostMapping("/rooms")
     public ResponseEntity<ApiResponse<ChatRoomResponse>> getOrCreateRoom(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal Long userId,
         @RequestParam Long itemId
     ) {
-        Long userId = Long.valueOf(userDetails.getUsername());
         ChatRoomResponse result = chatService.getOrCreateRoom(userId, itemId);
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(result));
     }
@@ -35,11 +33,10 @@ public class ChatController {
     /** 내 채팅 목록 */
     @GetMapping("/rooms")
     public ResponseEntity<ApiResponse<CursorPageResponse<ChatRoomResponse>>> getMyChatRooms(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal Long userId,
         @RequestParam(required = false) String cursor,
         @RequestParam(defaultValue = "20") int size
     ) {
-        Long userId = Long.valueOf(userDetails.getUsername());
         return ResponseEntity.ok(
             ApiResponse.success(chatService.getMyChatRooms(userId, cursor, size))
         );
@@ -48,12 +45,11 @@ public class ChatController {
     /** 메시지 목록 조회 */
     @GetMapping("/rooms/{roomId}/messages")
     public ResponseEntity<ApiResponse<CursorPageResponse<ChatMessageResponse>>> getMessages(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal Long userId,
         @PathVariable Long roomId,
         @RequestParam(required = false) String cursor,
         @RequestParam(defaultValue = "50") int size
     ) {
-        Long userId = Long.valueOf(userDetails.getUsername());
         return ResponseEntity.ok(
             ApiResponse.success(chatService.getMessages(userId, roomId, cursor, size))
         );
@@ -62,11 +58,10 @@ public class ChatController {
     /** 메시지 전송 (REST fallback — 주 경로는 WebSocket) */
     @PostMapping("/rooms/{roomId}/messages")
     public ResponseEntity<ApiResponse<ChatMessageResponse>> sendMessage(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal Long userId,
         @PathVariable Long roomId,
         @Valid @RequestBody SendMessageRequest request
     ) {
-        Long userId = Long.valueOf(userDetails.getUsername());
         ChatMessageResponse result = chatService.sendMessage(userId, roomId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(result));
     }
@@ -74,10 +69,9 @@ public class ChatController {
     /** 읽음 처리 */
     @PatchMapping("/rooms/{roomId}/read")
     public ResponseEntity<Void> markAsRead(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal Long userId,
         @PathVariable Long roomId
     ) {
-        Long userId = Long.valueOf(userDetails.getUsername());
         chatService.markAsRead(userId, roomId);
         return ResponseEntity.noContent().build();
     }

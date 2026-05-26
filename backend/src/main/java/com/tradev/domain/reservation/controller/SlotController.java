@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,10 +23,9 @@ public class SlotController {
     /** 슬롯 일괄 생성 */
     @PostMapping
     public ResponseEntity<ApiResponse<List<SlotResponse>>> createSlots(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal Long userId,
         @Valid @RequestBody SlotRequest.BatchCreate request
     ) {
-        Long userId = Long.valueOf(userDetails.getUsername());
         List<SlotResponse> result = reservationService.createSlots(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(result));
     }
@@ -57,10 +55,9 @@ public class SlotController {
     /** 슬롯 삭제 */
     @DeleteMapping("/{slotId}")
     public ResponseEntity<Void> deleteSlot(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal Long userId,
         @PathVariable Long slotId
     ) {
-        Long userId = Long.valueOf(userDetails.getUsername());
         reservationService.deleteSlot(userId, slotId);
         return ResponseEntity.noContent().build();
     }

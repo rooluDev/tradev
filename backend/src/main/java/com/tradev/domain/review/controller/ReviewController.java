@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,10 +21,9 @@ public class ReviewController {
     /** 리뷰 작성 */
     @PostMapping("/api/reviews")
     public ResponseEntity<ApiResponse<ReviewResponse>> createReview(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal Long userId,
         @Valid @RequestBody ReviewRequest.Create request
     ) {
-        Long userId = Long.valueOf(userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(ApiResponse.success(reviewService.createReview(userId, request)));
     }
@@ -45,11 +43,10 @@ public class ReviewController {
     /** 리뷰 답글 작성 */
     @PostMapping("/api/reviews/{reviewId}/reply")
     public ResponseEntity<ApiResponse<ReviewResponse>> addReply(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal Long userId,
         @PathVariable Long reviewId,
         @Valid @RequestBody ReviewRequest.Reply request
     ) {
-        Long userId = Long.valueOf(userDetails.getUsername());
         return ResponseEntity.ok(
             ApiResponse.success(reviewService.addReply(userId, reviewId, request))
         );
