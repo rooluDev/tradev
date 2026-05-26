@@ -40,6 +40,26 @@ export const useAuthStore = defineStore('auth', () => {
     return data.data
   }
 
+  /**
+   * 새로고침 시 HttpOnly refresh token 쿠키로 세션 복원.
+   * axios 인터셉터를 거치지 않도록 fetch 직접 사용 (오류 시 리다이렉트 방지).
+   */
+  async function restoreSession() {
+    try {
+      const base = import.meta.env.VITE_API_BASE_URL || '/api'
+      const res = await fetch(`${base}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      if (!res.ok) return
+      const json = await res.json()
+      accessToken.value = json.data.accessToken
+      await fetchMyInfo()
+    } catch {
+      // refresh token 없거나 만료 → 로그아웃 상태 유지
+    }
+  }
+
   return {
     user,
     accessToken,
@@ -50,5 +70,6 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     fetchMyInfo,
+    restoreSession,
   }
 })
