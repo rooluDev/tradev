@@ -40,11 +40,12 @@ https://github.com/user-attachments/assets/c6689a58-989f-498a-ba9a-eac9a100bfb2
 
 ### 채팅
 
+https://github.com/user-attachments/assets/3f2aaa67-c774-42f5-bba6-bbe2c3f4a653
+
 ### 회원가입
 
-
-
 https://github.com/user-attachments/assets/544b9399-3a1b-4129-aed8-1a65122b8155
+
 
 
 ---
