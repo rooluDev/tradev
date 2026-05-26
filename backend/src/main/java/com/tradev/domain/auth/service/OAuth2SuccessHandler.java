@@ -38,7 +38,10 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             return;
         }
 
-        String accessToken = jwtUtil.generateAccessToken(userId);
+        String role = oAuth2User.getAttribute("role");
+        if (role == null) role = "USER";
+
+        String accessToken = jwtUtil.generateAccessToken(userId, role);
         String refreshToken = jwtUtil.generateRefreshToken(userId);
 
         // Redis에 refresh token 저장

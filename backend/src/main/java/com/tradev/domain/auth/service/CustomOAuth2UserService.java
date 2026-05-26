@@ -13,6 +13,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -50,9 +51,15 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                         })
                 );
 
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("userId", user.getId());
+        attributes.put("sub", providerId);
+        attributes.put("email", email);
+        attributes.put("role", user.getRole().name());
+
         return new DefaultOAuth2User(
                 oAuth2User.getAuthorities(),
-                Map.of("userId", user.getId(), "sub", providerId, "email", email),
+                attributes,
                 "sub"
         );
     }
