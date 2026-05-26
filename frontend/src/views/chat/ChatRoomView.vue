@@ -133,9 +133,16 @@ onUnmounted(() => {
         <!-- 상대방 -->
         <div v-if="msg.sender.id !== myId" class="flex items-end gap-2 max-w-[70%]">
           <img
-            :src="msg.sender.profileImageUrl || '/default-avatar.png'"
+            v-if="msg.sender.profileImageUrl"
+            :src="msg.sender.profileImageUrl"
             class="w-8 h-8 rounded-full object-cover flex-shrink-0"
           />
+          <div
+            v-else
+            class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0"
+          >
+            <span class="text-xs font-medium text-primary-700">{{ msg.sender.nickname?.[0] }}</span>
+          </div>
           <div>
             <p class="text-xs text-gray-500 mb-1">{{ msg.sender.nickname }}</p>
             <div class="bg-white rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm">

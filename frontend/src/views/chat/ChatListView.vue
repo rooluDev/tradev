@@ -75,10 +75,17 @@ onMounted(() => fetchRooms(true))
         <!-- 상대방 프로필 이미지 -->
         <div class="relative flex-shrink-0">
           <img
-            :src="room.opponent.profileImageUrl || '/default-avatar.png'"
+            v-if="room.opponent.profileImageUrl"
+            :src="room.opponent.profileImageUrl"
             :alt="room.opponent.nickname"
-            class="w-12 h-12 rounded-full object-cover bg-gray-200"
+            class="w-12 h-12 rounded-full object-cover"
           />
+          <div
+            v-else
+            class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center"
+          >
+            <span class="text-base font-medium text-primary-700">{{ room.opponent.nickname?.[0] }}</span>
+          </div>
           <span
             v-if="room.unreadCount > 0"
             class="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1"
