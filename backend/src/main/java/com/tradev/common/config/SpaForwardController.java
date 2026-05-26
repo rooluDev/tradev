@@ -14,14 +14,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class SpaForwardController {
 
-    // 점 없는 단일 세그먼트 경로 (예: /login, /trades, /oauth2)
-    @GetMapping(value = "/{path:[^\\.]*}")
+    // 점 없는 단일 세그먼트 경로, api/ws/actuator/admin/assets 제외
+    // 예: /login, /trades, /oauth2, /wishlist
+    @GetMapping(value = "/{path:^(?!api|ws|actuator|admin|assets)[^.]*$}")
     public String forwardRoot() {
         return "forward:/index.html";
     }
 
-    // 점 없는 첫 세그먼트 + 하위 경로 (예: /oauth2/callback, /items/123/edit)
-    @GetMapping(value = "/{path:[^\\.]*}/**")
+    // 점 없는 첫 세그먼트 + 하위 경로, api/ws/actuator/admin/assets 제외
+    // 예: /oauth2/callback, /items/123, /items/123/edit
+    @GetMapping(value = "/{path:^(?!api|ws|actuator|admin|assets)[^.]*$}/**")
     public String forwardNested() {
         return "forward:/index.html";
     }
