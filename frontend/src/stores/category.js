@@ -25,5 +25,10 @@ export const useCategoryStore = defineStore('category', () => {
     return result
   }
 
-  return { categories, loaded, fetchCategories, flatList }
+  function findById(id) {
+    if (!id) return null
+    return flatList().find((cat) => cat.id === Number(id)) ?? null
+  }
+
+  return { categories, loaded, fetchCategories, flatList, findById }
 })
